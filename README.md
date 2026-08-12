@@ -114,7 +114,7 @@ python server.py
 ## 🛣️ 路线图
 
 - [x] Dashboard：电脑浏览器实时查看对话、工具调用、截图
-- [x] Dashboard 动效：状态过渡、计数反馈、清空退出（v1.1.1）
+- [x] Dashboard 重新设计（v1.2.0）：左侧导航栏 + agent 风格对话流（工具输入/输出内联）+ 右侧 Screens/Files/System 三 Tab + 全量动效
 - [ ] 浏览器自动化（CDP 驱动 Chrome）
 - [ ] 开机自启（任务计划程序）
 

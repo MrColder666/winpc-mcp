@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.2.0] - 2026-08-12
+
+### Added
+
+- Dashboard 全新三栏布局（重新设计）：
+  - **左侧导航栏（rail）**：winpc logo + 对话/活动视图切换 + 设置/账户抽屉，active 指示器滑动跟随（250ms）
+  - **中间对话流（agent 风格）**：对话消息与工具调用气泡交错排列，每个工具显示输入（args）与输出（result），像普通 agent 界面
+  - **右侧 Tab 化面板**：Screens（截图）/ Files（文件预览，serve_file 结果自动收集）/ System（系统状态）
+  - 设置抽屉：服务器地址复制、实时流暂停/恢复开关、清空日志、版本信息
+  - 账户抽屉：Dashboard 认证状态、重新登录
+- 动效（find-animation-opportunities 门禁筛选）：
+  - 侧边栏 active 指示器滑动（spatial consistency，250ms ease-out）
+  - 抽屉滑入（320ms drawer 曲线 cubic-bezier(0.32, 0.72, 0, 1)）+ 行内容 stagger 40ms
+  - 工具气泡 running→完成状态 chip 颜色过渡（250ms）+ 结果内容 160ms 出现
+  - 工具气泡折叠/展开（grid-template-rows 高度动画 250ms）
+  - running 状态骨架扫描条（1.1s 循环反馈）
+  - 对话消息组入场 stagger（40ms）
+  - 右侧 tab active pill 滑动 + 内容 fade/slide（160-200ms）
+  - 全局 press feedback（scale 0.97，160ms）+ 空状态 logo 光晕
+  - 全部尊重 prefers-reduced-motion（降级为瞬变）
+
 ## [v1.1.1] - 2026-08-12
 
 ### Changed
