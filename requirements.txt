@@ -1,0 +1,14 @@
+# winpc-mcp 依赖
+# 跨平台核心
+fastmcp>=2.0
+fastapi>=0.110
+uvicorn>=0.29
+psutil>=5.9
+requests>=2.31
+
+# Windows 专属（pyautogui/mss/pyperclip 在非 Windows 平台也允许安装，
+# 但工具在非 Windows 上调用时返回明确错误）
+pyautogui>=0.9.54
+mss>=9.0
+pyperclip>=1.8
+pillow>=10.0

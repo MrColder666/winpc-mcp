@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>winpc · telemetry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Hallmark · Cobalt · Workbench(05) · critique: structure 8 / hierarchy 8 /
+   rhythm 8 / type 8 / motion 7 / cohesion 9
+   winpc · telemetry — 远程 agent 操作监控台（iPad Minis → Windows）
+   ========================================================================== */
+
+/* ---------- tokens (OKLCH) ---------- */
+:root {
+  --ease-out:       cubic-bezier(0.23, 1, 0.32, 1);
+  --color-paper:      oklch(98.5% 0.004 250);
+  --color-paper-2:    oklch(96.8% 0.006 250);
+  --color-ink:        oklch(24%  0.022 258);
+  --color-ink-2:      oklch(36%  0.018 257);
+  --color-muted:      oklch(55%  0.018 258);
+  --color-faint:      oklch(72%  0.014 255);
+  --color-rule:       oklch(91%  0.008 250);
+  --color-rule-strong:oklch(84%  0.012 250);
+  --color-accent:     oklch(56%  0.21  256);   /* electric cobalt */
+  --color-accent-ink: oklch(46%  0.19  256);
+  --color-graphite:   oklch(21%  0.016 262);   /* the one dark band */
+  --color-graphite-2: oklch(25.5% 0.017 262);
+  --color-graphite-3: oklch(31%  0.02  262);
+  --color-on-dark:    oklch(92%  0.008 255);
+  --color-on-dark-2:  oklch(70%  0.02  260);
+  --color-ok:         oklch(62%  0.15  155);
+  --color-err:        oklch(58%  0.21   25);
+  --color-warn:       oklch(74%  0.16   85);
+  --font-display: "Space Grotesk", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-body: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --radius: 10px;
+  --radius-s: 6px;
+  --shadow-card: 0 1px 2px oklch(24% 0.022 258 / 6%), 0 8px 24px oklch(24% 0.022 258 / 5%);
+}
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { overflow-x: clip; }
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); font-style: normal; font-weight: 600; letter-spacing: -0.01em; }
+.mono { font-family: var(--font-mono); }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* 计数 +1 时的反馈：闪一下强调色（200ms 变过去，移除后 200ms 回来） */
+.num.flash { color: var(--color-accent) !important; }
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--color-accent-ink); }
+
+/* ---------- topbar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 20px;
+  padding: 14px 24px;
+  background: oklch(98.5% 0.004 250 / 88%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-rule);
+}
+.wordmark { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.01em; }
+.wordmark .dot { color: var(--color-accent); }
+.wordmark .sub { color: var(--color-muted); font-weight: 500; }
+.topbar .spacer { flex: 1; }
+.stat { display: flex; align-items: baseline; gap: 6px; }
+.stat .num { font-size: 17px; font-weight: 600; color: var(--color-ink); transition: color 200ms var(--ease-out); }
+.stat .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-muted); }
+.stat.sep { padding-left: 16px; border-left: 1px solid var(--color-rule); }
+.conn { display: flex; align-items: center; gap: 8px; padding: 5px 12px; border: 1px solid var(--color-rule); border-radius: 999px; background: var(--color-paper-2); }
+.conn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-err); }
+.conn.on .dot { background: var(--color-ok); box-shadow: 0 0 0 0 oklch(62% 0.15 155 / 45%); animation: pulse 2.2s ease-out infinite; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 oklch(62% 0.15 155 / 45%); }
+  70% { box-shadow: 0 0 0 7px oklch(62% 0.15 155 / 0%); }
+  100% { box-shadow: 0 0 0 0 oklch(62% 0.15 155 / 0%); }
+}
+.conn .txt { font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-2); }
+.cmdk-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px 5px 12px;
+  border: 1px solid var(--color-rule-strong); border-radius: 8px;
+  background: var(--color-paper);
+  color: var(--color-muted);
+  font-family: var(--font-mono); font-size: 11px;
+}
+.cmdk-btn kbd {
+  font-family: var(--font-mono); font-size: 10px;
+  padding: 1px 5px; border: 1px solid var(--color-rule-strong);
+  border-radius: 4px; background: var(--color-paper-2); color: var(--color-ink-2);
+}
+
+/* ---------- workbench layout ---------- */
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.35fr) minmax(260px, 0.8fr);
+  gap: 0;
+  height: calc(100vh - 106px);
+  overflow: hidden;
+}
+.pane { min-width: 0; display: flex; flex-direction: column; }
+.pane-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.pane-head .tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-muted); }
+.pane-head .count { font-family: var(--font-mono); font-size: 10px; color: var(--color-faint); }
+.pane-head .spacer { flex: 1; }
+.pane-head .tool { color: var(--color-accent); }
+.pane-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+
+/* left: dialogue — light */
+.pane-dialogue { border-right: 1px solid var(--color-rule); background: var(--color-paper); }
+.chat-item { padding: 14px 20px; border-bottom: 1px solid var(--color-rule); animation: rise 0.35s ease both; }
+.chat-item .meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.chat-item .who { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.chat-item .when { font-family: var(--font-mono); font-size: 10px; color: var(--color-faint); margin-left: auto; }
+.chat-item.user { border-left: 3px solid var(--color-accent); background: oklch(56% 0.21 256 / 4%); }
+.chat-item.user .who { color: var(--color-accent-ink); }
+.chat-item.assistant .who { color: var(--color-ink-2); }
+.chat-item .body { white-space: pre-wrap; word-break: break-word; color: var(--color-ink); font-size: 13.5px; }
+.chat-item.system { background: transparent; }
+.chat-item.system .body { text-align: center; color: var(--color-muted); font-family: var(--font-mono); font-size: 11px; }
+
+/* middle: tool calls — the graphite band */
+.pane-tools { background: var(--color-graphite); }
+.pane-tools .pane-head { border-bottom-color: oklch(100% 0 0 / 9%); }
+.pane-tools .pane-head .tag { color: var(--color-on-dark-2); }
+.pane-tools .pane-head .count { color: oklch(70% 0.02 260 / 60%); }
+.tool-list { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.tool-card {
+  border: 1px solid oklch(100% 0 0 / 10%);
+  border-radius: var(--radius);
+  background: var(--color-graphite-2);
+  overflow: hidden;
+  animation: rise 0.35s ease both;
+  transition: background-color 250ms var(--ease-out),
+              border-left-width 250ms var(--ease-out),
+              border-left-color 250ms var(--ease-out);
+}
+.tool-card.running { border-color: oklch(56% 0.21 256 / 70%); box-shadow: 0 0 0 1px oklch(56% 0.21 256 / 35%); }
+.tool-card.ok    { border-left: 3px solid var(--color-ok); }
+.tool-card.error { border-left: 3px solid var(--color-err); }
+/* 清空日志时的退出过渡：先淡出上移，180ms 后移除 DOM */
+.tool-card.leaving, .d-item.leaving {
+  animation: none !important;
+  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.tool-card .t-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; }
+.tool-card .t-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-warn); flex: none; transition: background 250ms var(--ease-out); }
+.tool-card.running .t-dot { background: var(--color-accent); animation: blink 1s steps(2) infinite; }
+.tool-card.ok .t-dot { background: var(--color-ok); }
+.tool-card.error .t-dot { background: var(--color-err); }
+@keyframes blink { 50% { opacity: 0.25; } }
+.tool-card .t-name { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; color: var(--color-on-dark); }
+.tool-card .t-time { font-family: var(--font-mono); font-size: 10px; color: var(--color-on-dark-2); margin-left: auto; }
+.tool-card .t-dur { font-family: var(--font-mono); font-size: 10px; color: var(--color-on-dark-2); padding: 1px 7px; border: 1px solid oklch(100% 0 0 / 14%); border-radius: 999px; animation: rise 160ms var(--ease-out) both; }
+.tool-card .t-status { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-on-dark-2); transition: color 250ms var(--ease-out); }
+.tool-card .t-body { padding: 0 14px 12px; display: grid; gap: 8px; }
+.tool-card .t-block { border-radius: var(--radius-s); background: oklch(0% 0 0 / 22%); padding: 9px 11px; overflow-x: auto; animation: rise 160ms var(--ease-out) both; }
+.tool-card .t-block-lbl { display: block; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-on-dark-2); margin-bottom: 4px; opacity: 0.75; }
+.tool-card pre { margin: 0; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; color: var(--color-on-dark); white-space: pre-wrap; word-break: break-all; }
+.tool-card .t-fold { border: 0; background: none; color: var(--color-on-dark-2); font-family: var(--font-mono); font-size: 10px; padding: 2px 0; }
+.tool-card .t-fold:hover { color: var(--color-accent); }
+.tool-card pre .j-k { color: oklch(78% 0.12 240); }
+.tool-card pre .j-s { color: oklch(84% 0.13 145); }
+.tool-card pre .j-n { color: oklch(80% 0.13 60); }
+.tool-card pre .j-b { color: oklch(70% 0.02 260); }
+
+/* right: screen + system — light */
+.pane-side { border-left: 1px solid var(--color-rule); background: var(--color-paper); }
+.shots { padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.shot-frame {
+  border: 1px solid var(--color-rule-strong); border-radius: var(--radius);
+  background: var(--color-paper-2); overflow: hidden;
+  cursor: zoom-in; transition: border-color 0.15s ease, transform 0.15s ease;
+  animation: rise 0.35s ease both;
+}
+.shot-frame:hover { border-color: var(--color-accent); transform: translateY(-1px); }
+.shot-frame .shot-img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--color-graphite); }
+.shot-frame .shot-cap { display: flex; justify-content: space-between; padding: 6px 9px; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-muted); }
+.shot-empty {
+  grid-column: 1 / -1; text-align: center; color: var(--color-faint);
+  font-family: var(--font-mono); font-size: 11px; padding: 40px 0;
+  border: 1px dashed var(--color-rule-strong); border-radius: var(--radius);
+}
+.sys { padding: 0 20px 16px; border-top: 1px solid var(--color-rule); }
+.sys h3 { font-size: 10px; font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-muted); margin: 14px 0 10px; }
+.meter { margin-bottom: 12px; }
+.meter .m-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.meter .m-name { font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-2); }
+.meter .m-val { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+.meter .m-bar { height: 4px; border-radius: 2px; background: var(--color-rule); overflow: hidden; }
+.meter .m-fill { height: 100%; width: 0%; border-radius: 2px; background: var(--color-accent); transition: width 0.6s ease; }
+.meter.hot .m-fill { background: var(--color-warn); }
+.spark { width: 100%; height: 34px; display: block; }
+
+/* ---------- control bar ---------- */
+.controlbar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 24px;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-paper-2);
+}
+.controlbar .addr { font-family: var(--font-mono); font-size: 11px; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.controlbar .spacer { flex: 1; }
+.cbtn {
+  font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-2);
+  background: none; border: 1px solid var(--color-rule-strong); border-radius: 7px;
+  padding: 5px 11px; transition: border-color 0.15s ease, color 0.15s ease;
+}
+.cbtn:hover { border-color: var(--color-accent); color: var(--color-accent-ink); }
+.cbtn.danger:hover { border-color: var(--color-err); color: var(--color-err); }
+
+/* ---------- overlays ---------- */
+.overlay { position: fixed; inset: 0; z-index: 60; display: none; }
+.overlay.show { display: flex; }
+.cmdk-overlay { align-items: flex-start; justify-content: center; padding-top: 12vh; background: oklch(24% 0.022 258 / 32%); backdrop-filter: blur(3px); }
+.cmdk {
+  width: min(560px, 92vw);
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  animation: pop 0.18s ease both;
+}
+.cmdk input {
+  width: 100%; border: 0; outline: 0; background: none;
+  padding: 15px 18px; font-size: 15px; font-family: var(--font-body);
+  border-bottom: 1px solid var(--color-rule);
+}
+.cmdk-list { max-height: 40vh; overflow-y: auto; padding: 7px; }
+.cmdk-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: var(--color-ink-2);
+}
+.cmdk-item:hover, .cmdk-item.sel { background: oklch(56% 0.21 256 / 9%); color: var(--color-ink); }
+.cmdk-item .ci-k { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--color-faint); }
+.cmdk-empty { padding: 18px; text-align: center; color: var(--color-muted); font-size: 12.5px; }
+.lightbox-overlay { align-items: center; justify-content: center; background: oklch(10% 0.01 260 / 78%); }
+.lightbox-overlay img { max-width: 92vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 24px 80px oklch(0% 0 0 / 50%); }
+.login-overlay { align-items: center; justify-content: center; background: var(--color-paper); }
+.login-card {
+  width: min(340px, 90vw); text-align: center;
+  border: 1px solid var(--color-rule-strong); border-radius: 16px;
+  padding: 34px 28px; box-shadow: var(--shadow-card);
+}
+.login-card h2 { margin: 10px 0 4px; font-size: 19px; }
+.login-card p { color: var(--color-muted); font-size: 12.5px; margin: 0 0 18px; }
+.login-card input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--color-rule-strong);
+  border-radius: 8px; font-size: 14px; outline: none; text-align: center;
+}
+.login-card input:focus { border-color: var(--color-accent); }
+.login-card .err { color: var(--color-err); font-size: 12px; min-height: 18px; margin-top: 8px; }
+.login-card button {
+  margin-top: 12px; width: 100%; padding: 10px;
+  background: var(--color-accent); color: #fff; border: 0; border-radius: 8px;
+  font-weight: 600; font-size: 14px;
+}
+.login-card button:hover { filter: brightness(1.08); }
+
+/* ---------- motion ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- scrollbars ---------- */
+.pane-body::-webkit-scrollbar, .cmdk-list::-webkit-scrollbar { width: 8px; }
+.pane-body::-webkit-scrollbar-thumb, .cmdk-list::-webkit-scrollbar-thumb { background: var(--color-rule-strong); border-radius: 4px; }
+.pane-tools .pane-body::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 16%); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .workbench { grid-template-columns: 1fr 1.4fr; grid-template-rows: 1fr 1fr; height: calc(100vh - 106px); }
+  .pane-dialogue { grid-row: 1 / 3; }
+  .pane-side { border-left: 0; border-top: 1px solid var(--color-rule); }
+}
+@media (max-width: 760px) {
+  .workbench { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; overflow: visible; }
+  .pane { min-height: 40vh; }
+  .pane-dialogue { grid-row: auto; border-right: 0; }
+  .stat.lbl-hide { display: none; }
+  .topbar { flex-wrap: wrap; padding: 10px 14px; }
+  .workbench { height: auto; }
+  .pane-body { max-height: none; overflow: visible; }
+}
+</style>
+</head>
+
+<body>
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <div class="wordmark">winpc<span class="dot">·</span>telemetry</div>
+    <div class="spacer"></div>
+    <div class="stat lbl-hide"><span class="num" id="st-total">0</span><span class="lbl">calls</span></div>
+    <div class="stat sep"><span class="num" id="st-ok" style="color:var(--color-ok)">0</span><span class="lbl">ok</span></div>
+    <div class="stat sep"><span class="num" id="st-err" style="color:var(--color-err)">0</span><span class="lbl">err</span></div>
+    <div class="stat sep lbl-hide"><span class="num" id="st-avg">–</span><span class="lbl">avg ms</span></div>
+    <div class="conn off" id="conn"><span class="dot"></span><span class="txt" id="conn-txt">connecting</span></div>
+    <button class="cmdk-btn" id="cmdk-btn" title="命令面板"><span>命令</span><kbd>⌘K</kbd></button>
+  </header>
+
+  <!-- 工作台 -->
+  <main class="workbench">
+    <section class="pane pane-dialogue">
+      <div class="pane-head"><span class="tag">Dialogue</span><span class="count" id="chat-count"></span><span class="spacer"></span><span class="tag tool" id="chat-live">live</span></div>
+      <div class="pane-body" id="chat-list"></div>
+    </section>
+    <section class="pane pane-tools">
+      <div class="pane-head"><span class="tag">Tool calls</span><span class="count" id="tool-count"></span><span class="spacer"></span><span class="tag" id="tool-filter"></span></div>
+      <div class="pane-body"><div class="tool-list" id="tool-list"></div></div>
+    </section>
+    <section class="pane pane-side">
+      <div class="pane-head"><span class="tag">Screen</span><span class="count" id="shot-count"></span></div>
+      <div class="pane-body">
+        <div class="shots" id="shots"></div>
+        <div class="sys">
+          <h3>System</h3>
+          <div class="meter" id="m-cpu">
+            <div class="m-row"><span class="m-name">CPU</span><span class="m-val num" id="cpu-val">–</span></div>
+            <div class="m-bar"><div class="m-fill" id="cpu-fill"></div></div>
+            <canvas class="spark" id="spark-cpu"></canvas>
+          </div>
+          <div class="meter" id="m-mem">
+            <div class="m-row"><span class="m-name">MEMORY</span><span class="m-val num" id="mem-val">–</span></div>
+            <div class="m-bar"><div class="m-fill" id="mem-fill"></div></div>
+            <canvas class="spark" id="spark-mem"></canvas>
+          </div>
+          <div class="meter" id="m-disk">
+            <div class="m-row"><span class="m-name">DISK</span><span class="m-val num" id="disk-val">–</span></div>
+            <div class="m-bar"><div class="m-fill" id="disk-fill"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部控制条 -->
+  <footer class="controlbar">
+    <span class="addr" id="addr">–</span>
+    <span class="addr" id="uptime">–</span>
+    <div class="spacer"></div>
+    <button class="cbtn" id="btn-pause">暂停</button>
+    <button class="cbtn danger" id="btn-clear">清空</button>
+  </footer>
+
+  <!-- ⌘K -->
+  <div class="overlay cmdk-overlay" id="cmdk">
+    <div class="cmdk">
+      <input id="cmdk-input" placeholder="过滤工具调用，或输入命令…" autocomplete="off">
+      <div class="cmdk-list" id="cmdk-list"></div>
+    </div>
+  </div>
+
+  <!-- 截图放大 -->
+  <div class="overlay lightbox-overlay" id="lightbox" onclick="this.classList.remove('show')">
+    <img id="lightbox-img" alt="">
+  </div>
+
+  <!-- 登录 -->
+  <div class="overlay login-overlay" id="login">
+    <div class="login-card">
+      <div class="wordmark" style="font-size:18px">winpc<span class="dot">·</span>telemetry</div>
+      <h2>输入 Dashboard 口令</h2>
+      <p>该口令由 config.json 的 dashboard_password 配置</p>
+      <form id="login-form">
+        <input type="password" id="login-pass" placeholder="口令" autocomplete="current-password">
+        <div class="err" id="login-err"></div>
+        <button type="submit">进入</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+/* ================= state ================= */
+const S = {
+  key: localStorage.getItem('winpc_dash_key') || '',
+  es: null,
+  paused: false,
+  after: 0,
+  cards: new Map(),       // ts -> tool card element（running → 完成更新）
+  toolCount: 0, okCount: 0, errCount: 0, durSum: 0, durN: 0,
+  spark: { cpu: [], mem: [] },
+  filter: '',
+};
+const $ = (id) => document.getElementById(id);
+const fmtTime = (ts) => new Date(ts * 1000).toLocaleTimeString('zh-CN', { hour12: false });
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ================= JSON 高亮 ================= */
+function hlJson(s) {
+  if (typeof s !== 'string') s = JSON.stringify(s, null, 2);
+  if (s.length > 3000) s = s.slice(0, 3000) + '\n…(截断)';
+  return esc(s).replace(/(&quot;|")?(&quot;|")?/g, '') // no-op guard
+    .replace(/("[^"]*")(\s*:)?/g, (m, q, c) => c ? `<span class="j-k">${q}</span>${c}` : `<span class="j-s">${q}</span>`)
+    .replace(/\b(true|false)\b/g, '<span class="j-b">$1</span>')
+    .replace(/\b-?\d+(\.\d+)?\b/g, '<span class="j-n">$&</span>');
+}
+
+/* ================= 渲染：工具调用 ================= */
+function flashNum(el) {
+  if (!el) return;
+  el.classList.remove('flash'); void el.offsetWidth; // 强制 reflow 重启动画
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 200); // 200ms 后颜色过渡回常态
+}
+function renderTool(ev) {
+  S.toolCount++;
+  const isRun = ev.status === 'running';
+  const card = document.createElement('div');
+  card.className = 'tool-card ' + (isRun ? 'running' : ev.status);
+  card.dataset.ts = ev.ts;
+  card.dataset.tool = ev.tool.toLowerCase();
+  const dur = ev.duration_ms != null ? `<span class="t-dur">${ev.duration_ms}ms</span>` : '';
+  card.innerHTML = `
+    <div class="t-head">
+      <span class="t-dot"></span>
+      <span class="t-name">${esc(ev.tool)}</span>
+      <span class="t-status">${isRun ? 'running' : ev.status}</span>
+      <span class="t-time">${fmtTime(ev.ts)}</span>
+      ${dur}
+    </div>
+    <div class="t-body">
+      <div class="t-block"><span class="t-block-lbl">args</span><pre class="args">${hlJson(ev.args)}</pre></div>
+      ${isRun ? '' : `<div class="t-block"><span class="t-block-lbl">result</span><pre class="res">${hlJson(ev.result)}</pre></div>`}
+    </div>`;
+  const list = $('tool-list');
+  list.prepend(card);
+  // 截图缩略图
+  if (ev.shot_id) { renderShot(ev.shot_id, ev.ts, ev.tool); }
+  // 完成事件更新对应 running 卡片
+  if (!isRun) {
+    const old = list.querySelector(`.tool-card.running[data-ts="${ev.ts}"]`);
+    if (old) {
+      old.classList.remove('running');
+      old.classList.add(ev.status);
+      old.querySelector('.t-status').textContent = ev.status;
+      if (ev.duration_ms != null) {
+        const head = old.querySelector('.t-head');
+        head.insertAdjacentHTML('beforeend', `<span class="t-dur">${ev.duration_ms}ms</span>`);
+      }
+      const tb = old.querySelector('.t-body');
+      tb.insertAdjacentHTML('beforeend', `<div class="t-block"><span class="t-block-lbl">result</span><pre class="res">${hlJson(ev.result)}</pre></div>`);
+    }
+  }
+  // 统计
+  if (!isRun) {
+    if (ev.status === 'ok') { S.okCount++; flashNum($('st-ok')); }
+    else if (ev.status === 'error') { S.errCount++; flashNum($('st-err')); }
+    if (ev.duration_ms != null) { S.durSum += ev.duration_ms; S.durN++; }
+    $('st-avg').textContent = S.durN ? Math.round(S.durSum / S.durN) : '–';
+  }
+  $('st-total').textContent = S.toolCount;
+  $('st-ok').textContent = S.okCount;
+  $('st-err').textContent = S.errCount;
+  $('tool-count').textContent = S.toolCount + ' 次';
+  applyFilter();
+}
+
+/* ================= 渲染：对话 ================= */
+function renderChat(ev) {
+  const item = document.createElement('div');
+  item.className = 'chat-item ' + (ev.role === 'user' ? 'user' : ev.role === 'assistant' ? 'assistant' : 'system');
+  const who = ev.role === 'user' ? 'iPad · user' : ev.role === 'assistant' ? 'agent' : 'system';
+  item.innerHTML = `<div class="meta"><span class="who">${who}</span><span class="when">${fmtTime(ev.ts)}</span></div><div class="body">${esc(ev.content)}</div>`;
+  const list = $('chat-list');
+  list.appendChild(item);
+  while (list.children.length > 400) list.removeChild(list.firstChild);
+  $('chat-count').textContent = list.children.length + ' 条';
+  if (!S.paused) list.scrollTop = list.scrollHeight;
+}
+
+/* ================= 渲染：截图 ================= */
+function renderShot(id, ts, tool) {
+  const wrap = document.createElement('div');
+  wrap.className = 'shot-frame';
+  wrap.innerHTML = `<img class="shot-img" alt="截图 ${fmtTime(ts)}"><div class="shot-cap"><span>${esc(tool)}</span><span>${fmtTime(ts)}</span></div>`;
+  wrap.querySelector('img').onclick = () => { $('lightbox-img').src = wrap.querySelector('img').src; $('lightbox').classList.add('show'); };
+  const shots = $('shots');
+  const empty = shots.querySelector('.shot-empty');
+  if (empty) empty.remove();
+  shots.prepend(wrap);
+  while (shots.children.length > 24) shots.removeChild(shots.lastChild);
+  $('shot-count').textContent = shots.children.length + ' 张';
+  fetch('/api/screenshots/' + id, { headers: S.key ? { 'X-Dashboard-Key': S.key } : {} })
+    .then(r => { if (!r.ok) throw 0; return r.blob(); })
+    .then(b => { wrap.querySelector('img').src = URL.createObjectURL(b); })
+    .catch(() => { wrap.remove(); });
+}
+
+/* ================= 系统状态 ================= */
+function sysStatus() {
+  fetch('/api/status', { headers: S.key ? { 'X-Dashboard-Key': S.key } : {} })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => {
+      if (d.cpu != null) {
+        $('cpu-val').textContent = d.cpu.toFixed(0) + '%';
+        $('cpu-fill').style.width = d.cpu + '%';
+        S.spark.cpu.push(d.cpu); if (S.spark.cpu.length > 60) S.spark.cpu.shift();
+        drawSpark('spark-cpu', S.spark.cpu, getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim());
+      }
+      if (d.mem) {
+        $('mem-val').textContent = d.mem.percent.toFixed(0) + '% · ' + (d.mem.used / 2**30).toFixed(1) + 'G';
+        $('mem-fill').style.width = d.mem.percent + '%';
+        S.spark.mem.push(d.mem.percent); if (S.spark.mem.length > 60) S.spark.mem.shift();
+        drawSpark('spark-mem', S.spark.mem, getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim());
+      }
+      if (d.disks && d.disks.length) {
+        const disk = d.disks[0];
+        $('disk-val').textContent = disk.percent.toFixed(0) + '% · ' + (disk.used / 2**30).toFixed(0) + 'G';
+        $('disk-fill').style.width = disk.percent + '%';
+      }
+    })
+    .catch(() => {});
+}
+function drawSpark(id, data, color) {
+  const c = $(id); if (!c) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.clientWidth, h = c.clientHeight;
+  c.width = w * dpr; c.height = h * dpr;
+  const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  if (data.length < 2) return;
+  const max = 100, min = 0;
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = (i / 59) * w, y = h - ((v - min) / (max - min)) * (h - 4) - 2;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.strokeStyle = color || 'oklch(56% 0.21 256)';
+  ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+/* ================= 过滤器（⌘K 输入联动） ================= */
+function applyFilter() {
+  const q = S.filter.toLowerCase();
+  document.querySelectorAll('.tool-card').forEach(c => {
+    c.style.display = (!q || c.dataset.tool.includes(q)) ? '' : 'none';
+  });
+  $('tool-filter').textContent = q ? 'filter: ' + q : '';
+}
+
+/* ================= SSE ================= */
+function connect() {
+  const url = '/api/events?after=' + S.after + (S.key ? '&key=' + encodeURIComponent(S.key) : '');
+  S.es = new EventSource(url);
+  S.es.onopen = () => { $('conn').classList.add('on'); $('conn').classList.remove('off'); $('conn-txt').textContent = 'online'; };
+  S.es.onerror = () => {
+    $('conn').classList.remove('on'); $('conn').classList.add('off'); $('conn-txt').textContent = 'reconnecting';
+    S.es.close(); setTimeout(connect, 2500);
+  };
+  S.es.onmessage = (e) => {
+    if (e.data === 'ping' || !e.data) return;
+    let ev; try { ev = JSON.parse(e.data); } catch { return; }
+    S.after = Math.max(S.after, ev.ts || 0);
+    if (ev.type === 'tool_call') renderTool(ev);
+    else if (ev.type === 'chat') renderChat(ev);
+  };
+}
+
+/* ================= ⌘K ================= */
+const cmdkCmds = () => [
+  { label: '跳到 Dialogue', k: '1', act: () => document.querySelector('.pane-dialogue .pane-body').scrollIntoView({ behavior: 'smooth' }) },
+  { label: '跳到 Tool calls', k: '2', act: () => document.querySelector('.pane-tools').scrollIntoView({ behavior: 'smooth' }) },
+  { label: '跳到 Screen + System', k: '3', act: () => document.querySelector('.pane-side').scrollIntoView({ behavior: 'smooth' }) },
+  { label: S.paused ? '恢复实时流' : '暂停实时流', k: 'P', act: togglePause },
+  { label: '清空全部日志', k: '⌫', act: clearAll },
+  { label: '复制服务器地址', k: 'C', act: () => { navigator.clipboard.writeText($('addr').textContent); } },
+];
+function openCmdk() {
+  $('cmdk').classList.add('show');
+  $('cmdk-input').value = ''; S.filter = ''; applyFilter();
+  renderCmdk(cmdkCmds()); $('cmdk-input').focus();
+}
+function renderCmdk(items) {
+  const list = $('cmdk-list');
+  if (!items.length) { list.innerHTML = '<div class="cmdk-empty">无匹配命令</div>'; return; }
+  list.innerHTML = items.map((it, i) =>
+    `<div class="cmdk-item" data-i="${i}"><span>${esc(it.label)}</span><span class="ci-k">${it.k}</span></div>`).join('');
+  list.querySelectorAll('.cmdk-item').forEach(el => el.onclick = () => { items[+el.dataset.i].act(); $('cmdk').classList.remove('show'); });
+}
+$('cmdk-input').addEventListener('input', (e) => {
+  const q = e.target.value;
+  if (q.startsWith('/')) { S.filter = ''; applyFilter(); renderCmdk(cmdkCmds().filter(c => c.label.toLowerCase().includes(q.slice(1).toLowerCase()))); return; }
+  S.filter = q; applyFilter();
+  renderCmdk([{ label: '过滤工具: ' + q, k: '↵', act: () => { $('cmdk').classList.remove('show'); } },
+              ...cmdkCmds().filter(c => c.label.toLowerCase().includes(q.toLowerCase()))]);
+});
+
+/* ================= 控制 ================= */
+function togglePause() {
+  S.paused = !S.paused;
+  $('btn-pause').textContent = S.paused ? '恢复' : '暂停';
+  $('chat-live').textContent = S.paused ? 'paused' : 'live';
+  $('chat-live').style.color = S.paused ? 'var(--color-warn)' : '';
+}
+function clearAll() {
+  const items = document.querySelectorAll('.tool-card, .d-item');
+  const done = () => {
+    $('tool-list').innerHTML = ''; $('chat-list').innerHTML = '';
+    $('shots').innerHTML = '<div class="shot-empty">等待截图…</div>';
+    S.toolCount = S.okCount = S.errCount = S.durSum = S.durN = 0;
+    $('st-total').textContent = $('st-ok').textContent = $('st-err').textContent = '0';
+    $('st-avg').textContent = '–';
+    $('tool-count').textContent = $('chat-count').textContent = $('shot-count').textContent = '';
+  };
+  if (items.length) {
+    items.forEach(el => el.classList.add('leaving'));
+    setTimeout(done, 180); // 与 .leaving 过渡时长一致
+  } else done();
+}
+
+/* ================= 登录 & 启动 ================= */
+$('login-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('login-pass').value }) })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      if (ok && d.key) {
+        S.key = d.key; localStorage.setItem('winpc_dash_key', d.key);
+        $('login').classList.remove('show'); boot();
+      } else { $('login-err').textContent = '口令错误'; }
+    })
+    .catch(() => { $('login-err').textContent = '无法连接服务器'; });
+});
+function boot() {
+  $('addr').textContent = location.origin;
+  $('uptime').textContent = new Date().toLocaleDateString('zh-CN');
+  connect();
+  sysStatus();
+  setInterval(sysStatus, 5000);
+  $('cmdk-btn').onclick = openCmdk;
+  $('btn-pause').onclick = togglePause;
+  $('btn-clear').onclick = clearAll;
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('cmdk').classList.contains('show') ? $('cmdk').classList.remove('show') : openCmdk(); }
+    if (e.key === 'Escape') { $('cmdk').classList.remove('show'); $('lightbox').classList.remove('show'); }
+  });
+  $('cmdk').addEventListener('click', (e) => { if (e.target === $('cmdk')) $('cmdk').classList.remove('show'); });
+}
+(async () => {
+  try {
+    const r = await fetch('/api/auth/status');
+    const st = await r.json();
+    if (st.enabled && !S.key) { $('login').classList.add('show'); }
+    else boot();
+  } catch (e) { boot(); }
+})();
+</script>
+</body>
+</html>
