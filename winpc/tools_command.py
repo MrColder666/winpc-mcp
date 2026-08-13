@@ -50,6 +50,15 @@ def run_shell(command: str, timeout: int = 120, cwd: str = "") -> dict:
     return _run_shell(command, timeout, cwd)
 
 
+@tool
+def run_script(script: str, shell: str = "powershell", timeout: int = 300) -> dict:
+    """执行一整段多行脚本（一次调用完成复杂操作，避免多次小命令往返）。
+    script: 脚本内容（多行）; shell: powershell(默认) 或 cmd; timeout: 超时秒数（默认300）"""
+    if shell == "cmd":
+        return run_cmd(script, timeout)
+    return run_powershell(script, timeout)
+
+
 def _run_shell(command, timeout, cwd):
     try:
         proc = subprocess.run(

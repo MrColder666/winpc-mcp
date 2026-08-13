@@ -46,6 +46,35 @@ def write_file(path: str, content: str, encoding: str = "utf-8", append: bool = 
 
 
 @tool
+def write_files_batch(files: list) -> dict:
+    """批量写入多个文件（一次调用创建/覆盖 N 个文件，自动建父目录）。用于创建项目/批量生成代码，避免逐个 write_file 的多次往返。
+    files: 数组，每项 {"path": "绝对路径", "content": "文件内容", "encoding": "utf-8(可选，中文Windows可用gbk)"}"""
+    results, errors = [], []
+    for item in files or []:
+        path = item.get("path") if isinstance(item, dict) else None
+        try:
+            if not path:
+                raise RuntimeError("缺少 path")
+            _check_allowed(path)
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            content = item.get("content", "")
+            encoding = item.get("encoding", "utf-8")
+            with open(p, "w", encoding=encoding, newline="") as f:
+                f.write(content)
+            results.append({"path": str(p), "size": p.stat().st_size})
+        except Exception as e:
+            errors.append({"path": path, "error": f"{type(e).__name__}: {e}"})
+    return {
+        "written": len(results),
+        "failed": len(errors),
+        "results": results,
+        "errors": errors,
+        "hint": "批量写入完成；failed>0 时检查 errors 逐项处理",
+    }
+
+
+@tool
 def list_dir(path: str = ".", detailed: bool = False) -> dict:
     """列出目录内容。path: 目录路径（默认当前目录）; detailed: True时返回大小/修改时间"""
     p = Path(path)

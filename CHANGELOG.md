@@ -1,5 +1,18 @@
 # Changelog
 
+## [v1.4.0] - 2026-08-13
+
+### Added
+
+- **批量工具（解决 MCP 连接延迟导致的低效）**：
+  - `write_files_batch(files)`：一次调用批量创建/覆盖 N 个文件（自动建父目录），
+    vibe coding 创建项目从"20 次连接"降为"1 次连接"
+  - `run_script(script, shell)`：一次执行整段多行 PowerShell/CMD 脚本，
+    复杂操作不再拆成多次小调用
+- 工具总数 31 → 33
+- winpc-mcp skill 新增**操作规范**：禁止终端模拟（open_app+type_text+screenshot）、
+  批量优先、读操作用专用工具、screenshot 为最后手段、错误预检
+
 ## [v1.3.0] - 2026-08-13
 
 ### Added
