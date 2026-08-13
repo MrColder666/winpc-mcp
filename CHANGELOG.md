@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.3.0] - 2026-08-13
+
+### Added
+
+- Dashboard 全面美化 + 全量动效增强：
+  - **数字计数器动效**：统计数字变化时滚动上升（countUp 300ms）
+  - **数字闪烁反馈**：OK/ERR 计数变化时缩放 + 变色闪烁（400ms）
+  - **running shimmer**：工具运行中气泡整体流光扫过（1.5s linear）
+  - **logo 光晕动画**：侧边栏 logo 呼吸光晕（3.4s ease-in-out）
+  - **meter 填充动画**：系统仪表进度条 0.8s ease-out 填充 + 光泽扫过
+  - **截图 hover 放大**：截图卡片悬浮时图片 scale(1.03)
+  - **文件卡片 hover lift**：文件悬浮上移 + 阴影（--ease-out）
+  - **tab pill 滑动指示器**：右侧 tab 底部指示条平滑滑动（280ms ease-out）
+  - **视图切换动画**：chat/activity 切换时内容上浮淡入（250ms viewIn）
+  - **tab 内容切换**：rtab 切换时淡入（200ms）
+  - **统计数字 hover**：悬浮时轻微放大
+  - **新增 --ease-spring / --ease-bounce 曲线**：logo、截图、cmd+k 使用弹性曲线
+  - **地址栏点击复制**：点击服务器地址直接复制
+- 全部动效遵循 `prefers-reduced-motion`（降级为瞬变）
+- 全局 press feedback（scale 0.97, 160ms）+ hover lift（gated by hover: hover）
+
 ## [v1.2.2] - 2026-08-13
 
 ### Fixed
