@@ -61,3 +61,21 @@ def serve_file(path: str) -> dict:
         "size": p.stat().st_size,
         "hint": "在 iPad 端用 curl 或浏览器下载该 URL",
     }
+
+
+@tool
+def serve_file_batch(paths: list) -> dict:
+    """批量暴露多个文件为下载链接（一次调用生成 N 个文件的下载 URL）。paths: 文件绝对路径数组"""
+    results, errors = [], []
+    for p in paths or []:
+        try:
+            results.append(serve_file(p))
+        except Exception as e:
+            errors.append({"path": p, "error": f"{type(e).__name__}: {e}"})
+    return {
+        "count": len(results),
+        "failed": len(errors),
+        "files": results,
+        "errors": errors,
+        "hint": "用 iPad 端 curl 逐个下载 url 字段",
+    }

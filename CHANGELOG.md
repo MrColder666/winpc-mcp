@@ -1,5 +1,27 @@
 # Changelog
 
+## [v1.5.0] - 2026-08-13
+
+### Added
+
+- **开发工具（vibe coding 专项）**：
+  - `git_status` / `git_commit` / `git_push`：git 封装，一条龙版本管理
+  - `install_packages(manager, packages)`：后台安装 pip/npm 包，返回 task_id 不阻塞
+  - `get_task_status(task_id)`：查询后台任务结果（1 小时后自动清理）
+  - `read_file_batch(paths)`：一次读取 N 个文件（查看项目代码）
+  - `batch_run(commands)`：顺序执行多条命令返回数组
+- **系统管理**：
+  - `get_volume` / `set_volume`：音量控制（0-100）
+  - `lock_screen` / `shutdown` / `reboot` / `sleep`：电源管理（危险操作需 confirm）
+  - `get_network_info`：网卡 IP / 累计流量
+  - `notify(title, message)`：Windows 桌面通知气泡（6 秒自动消失）
+  - `get_cpu_temp`：CPU 温度（ACPI，台式机可能不支持）
+- **文件传输**：
+  - `serve_file_batch(paths)`：一次暴露 N 个文件下载链接
+  - **`POST /api/upload`**：iPad → 电脑文件上传（multipart: file + path），上传事件同步到 dashboard
+- **Dashboard**：设置抽屉新增"可用工具"数量 + 完整工具清单（来自新 `/api/info` 端点）
+- 工具总数 33 → 49
+
 ## [v1.4.0] - 2026-08-13
 
 ### Added

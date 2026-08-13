@@ -301,6 +301,37 @@ def main():
         bus.publish_sync({"type": "chat", "role": role, "content": content})
         return {"ok": True}
 
+    @app.post("/api/upload")
+    async def api_upload(request: Request):
+        """iPad → 电脑 文件上传：multipart/form-data，字段 file + path（目标绝对路径）。"""
+        try:
+            form = await request.form()
+            up = form.get("file")
+            path = (form.get("path") or "").strip()
+            if up is None or not path:
+                return JSONResponse(status_code=400, content={"error": "需要 file 和 path 字段"})
+            content = await up.read()
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(content)
+            bus.publish_sync({"type": "tool_call", "tool": "upload_file", "args": {"path": path},
+                              "status": "ok", "ts": time.time(), "duration_ms": 0,
+                              "result": {"path": str(p), "size": len(content)}})
+            return {"ok": True, "path": str(p), "size": len(content)}
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"error": f"{type(e).__name__}: {e}"})
+
+    @app.get("/api/info")
+    async def api_info():
+        """返回服务器与工具信息（dashboard 设置页展示）。"""
+        return {
+            "name": "winpc",
+            "version": "1.5.0",
+            "tools": [t.__name__ for t in winpc.ALL_TOOLS],
+            "token_fixed": bool(cfg.get("token")),
+            "dashboard_password": bool(dash_pwd),
+        }
+
     # 文件回传路由
     @app.get("/files/{fid}")
     async def download_file(fid: str):

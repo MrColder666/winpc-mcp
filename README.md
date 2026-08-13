@@ -114,6 +114,7 @@ python server.py
 ## 🛣️ 路线图
 
 - [x] Dashboard：电脑浏览器实时查看对话、工具调用、截图
+- [x] 49 个工具（v1.5.0）：新增开发（git/后台任务/批量读写）、系统管理（音量/电源/通知/网络/温度）、批量文件（write_files_batch/serve_file_batch）、iPad→电脑上传端点
 - [x] Dashboard 重新设计（v1.2.0）：左侧导航栏 + agent 风格对话流（工具输入/输出内联）+ 右侧 Screens/Files/System 三 Tab + 全量动效
 - [ ] 浏览器自动化（CDP 驱动 Chrome）
 - [ ] 开机自启（任务计划程序）

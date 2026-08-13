@@ -11,7 +11,7 @@
 /* ==========================================================================
    Hallmark · Cobalt · Workbench(07) · ENHANCED with micro-interactions
    winpc · console — 远程 agent 操作监控台（iPad Minis → Windows）
-   版本: v1.3.0 - 全面美化动效增强版
+   版本: v1.5.0 - 批量工具 + 系统管理 + 开发工具
    ========================================================================== */
 
 /* ---------- tokens (OKLCH) ---------- */
@@ -1029,7 +1029,15 @@ button:active, .rail-btn:active, .tab-btn:active, .cbtn:active, .cmdk-item:activ
       </div>
       <div class="drawer-row">
         <span class="d-lbl">版本</span>
-        <span class="d-val">winpc · console v1.3.0 — iPad Minis → Windows 远程控制</span>
+        <span class="d-val">winpc · console v1.5.0 — iPad Minis → Windows 远程控制</span>
+      </div>
+      <div class="drawer-row">
+        <span class="d-lbl">可用工具</span>
+        <span class="d-val" id="set-tools">检测中…</span>
+      </div>
+      <div class="drawer-row" style="display:block">
+        <span class="d-lbl" style="margin-bottom:6px;display:block">工具清单</span>
+        <div id="set-tools-list" class="d-val" style="font-size:10px;line-height:1.8;max-height:120px;overflow-y:auto"></div>
       </div>
     </div>
   </div>
@@ -1458,6 +1466,16 @@ function boot() {
       $('acc-status').textContent = d.enabled ? (d.authed ? '口令已启用 · 已认证' : '口令已启用 · 未认证') : '未配置口令（公开访问）';
     })
     .catch(() => {});
+  // 工具信息
+  fetch('/api/info')
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => {
+      if (d && Array.isArray(d.tools)) {
+        $('set-tools').textContent = d.tools.length + ' 个工具';
+        $('set-tools-list').textContent = d.tools.join(' · ');
+      }
+    })
+    .catch(() => { $('set-tools').textContent = '–'; });
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('cmdk').classList.contains('show') ? $('cmdk').classList.remove('show') : openCmdk(); }
   });
