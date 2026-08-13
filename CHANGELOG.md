@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.2.1] - 2026-08-12
+
+### Fixed
+
+- `start.bat` 在 Windows CMD 下中文乱码：文件为 UTF-8 编码而 CMD 默认 GBK 代码页。
+  脚本开头新增 `chcp 65001 >nul` 切换到 UTF-8 代码页，中文提示正常显示（功能不受影响）
+
 ## [v1.2.0] - 2026-08-12
 
 ### Added
