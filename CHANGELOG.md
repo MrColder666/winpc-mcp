@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.2.2] - 2026-08-13
+
+### Fixed
+
+- **局域网无法连接 MCP（421 Invalid Host header）**：新版 MCP SDK 在 FastMCP 默认
+  host（localhost）下自动启用 DNS rebinding 防护，只放行 127.0.0.1/localhost，
+  导致从 iPad 通过局域网 IP 访问 `/mcp` 被拒（421）。
+  - `server.py`：显式传入 `TransportSecuritySettings(enable_dns_rebinding_protection=False)`
+    关闭防护（带 try/except 兼容旧版 SDK）
+  - `requirements.txt`：固定 `fastmcp>=3.4,<3.5`，保证依赖的 MCP SDK 行为可预期
+
 ## [v1.2.1] - 2026-08-12
 
 ### Fixed

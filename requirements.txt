@@ -1,6 +1,9 @@
 # winpc-mcp 依赖
 # 跨平台核心
-fastmcp>=2.0
+# fastmcp 固定在 3.4.x：其依赖的 MCP SDK 版本中 FastMCP 默认 host 为 localhost
+# 时会自动启用 DNS rebinding 防护（421 Invalid Host header，拒绝局域网 IP 直连）。
+# server.py 已显式关闭防护，此处固定版本保证行为可预期
+fastmcp>=3.4,<3.5
 fastapi>=0.110
 uvicorn>=0.29
 psutil>=5.9

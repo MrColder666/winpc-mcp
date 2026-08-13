@@ -146,12 +146,22 @@ def main():
     tools_network.BASE_URL = f"http://{get_lan_ip()}:{cfg['port']}"
 
     # -------------------------------------------------- MCP 服务器
-    mcp = FastMCP(
-        "winpc",
-        instructions=("远程控制 Windows 电脑的 MCP 服务器。可用工具：执行 PowerShell/CMD 命令、"
-                      "读写/搜索文件、截屏、键盘鼠标控制、打开应用与网址、窗口管理、进程管理、"
-                      "HTTP 请求与文件下载、把电脑文件回传给 iPad。"),
-    )
+    # 关闭 DNS rebinding 防护：新版 MCP SDK 对 localhost host 自动启用 Host 校验，
+    # 会拒绝局域网 IP 直连（421 Invalid Host header）。显式关闭以支持局域网访问。
+    mcp_kwargs = {"instructions": (
+        "远程控制 Windows 电脑的 MCP 服务器。可用工具：执行 PowerShell/CMD 命令、"
+        "读写/搜索文件、截屏、键盘鼠标控制、打开应用与网址、窗口管理、进程管理、"
+        "HTTP 请求与文件下载、把电脑文件回传给 iPad。"
+    )}
+    try:
+        from mcp.server.transport_security import TransportSecuritySettings
+        mcp_kwargs["transport_security"] = TransportSecuritySettings(
+            enable_dns_rebinding_protection=False
+        )
+    except ImportError:
+        pass  # 旧版 SDK 无此防护，无需处理
+
+    mcp = FastMCP("winpc", **mcp_kwargs)
 
     # 注册全部工具（带日志包装）
     for fn in winpc.ALL_TOOLS:
