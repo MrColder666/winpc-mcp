@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.6.1] - 2026-08-14
+
+### Fixed
+
+- 操作指示器 Windows 端崩溃：
+  - 光标 `.cur` 改为手工构造文件格式（PIL 不支持保存 CUR 格式，报 `'CUR'` 错误）
+  - `GetModuleHandleW` 从 user32 移到 kernel32（正确 API 归属）
+  - 边框线程加启动锁，防止重复创建（原多次调用会启动多个线程）
+
 ## [v1.6.0] - 2026-08-13
 
 ### Added
