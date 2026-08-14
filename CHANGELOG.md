@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.6.0] - 2026-08-13
+
+### Added
+
+- **操作指示器（操控可视化）**：Minis 操控电脑时的视觉反馈
+  - 鼠标光标替换为**黄色 MINIS 光标**（PIL 生成 .cur，SetSystemCursor 临时替换，8s 无操作自动恢复）
+  - 被操作窗口周围显示**黄色边框**（topmost layered 窗口 + GDI 绘制，WindowFromPoint 定位，2s 无操作自动隐藏）
+  - 触发工具：move_mouse/click/type_text/press_key/scroll/get_mouse_position/set_clipboard/get_clipboard
+  - 非 Windows 环境自动降级 no-op（不影响开发测试）
+
 ## [v1.5.0] - 2026-08-13
 
 ### Added

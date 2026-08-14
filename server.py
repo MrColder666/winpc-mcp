@@ -99,9 +99,22 @@ def make_tool_wrapper(fn):
     """包装工具函数：记录调用参数/结果/耗时/成败，发布到事件总线。"""
     name = fn.__name__
 
+    # 需要显示"操作指示器"的工具（鼠标/键盘/点击类）
+    INDICATOR_TOOLS = {
+        "move_mouse", "click", "type_text", "press_key", "scroll",
+        "get_mouse_position", "set_clipboard", "get_clipboard",
+    }
+
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         t0 = time.time()
+        # 操作指示器：黄色 MINIS 光标 + 目标窗口黄框
+        try:
+            if name in INDICATOR_TOOLS:
+                from winpc import indicator
+                indicator.activate(kwargs.get("x"), kwargs.get("y"))
+        except Exception:
+            pass
         start_event = {"type": "tool_call", "tool": name,
                        "args": summarize(kwargs, 400), "status": "running",
                        "ts": t0}
@@ -326,7 +339,7 @@ def main():
         """返回服务器与工具信息（dashboard 设置页展示）。"""
         return {
             "name": "winpc",
-            "version": "1.5.0",
+            "version": "1.6.0",
             "tools": [t.__name__ for t in winpc.ALL_TOOLS],
             "token_fixed": bool(cfg.get("token")),
             "dashboard_password": bool(dash_pwd),
