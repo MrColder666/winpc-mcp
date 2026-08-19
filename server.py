@@ -43,6 +43,7 @@ def load_config(port, host) -> dict:
         "host": "0.0.0.0", "port": 8765, "token": "",
         "allowed_dirs": [], "confirm_dangerous": False,
         "dashboard_password": "",
+        "dsh": {"api_key": "", "workspace": ""},
     }
     if CONFIG_PATH.exists():
         try:
@@ -69,6 +70,7 @@ def load_config(port, host) -> dict:
 
     tools.CONFIG["confirm_dangerous"] = bool(cfg.get("confirm_dangerous"))
     tools.CONFIG["allowed_dirs"] = list(cfg.get("allowed_dirs", []) or [])
+    tools.CONFIG["dsh"] = cfg.get("dsh", {}) or {}
     return cfg
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.7.0] - 2026-08-14
+
+### Added
+
+- **DeepSeek Harness 集成（dsh_run）**：把任务交给电脑上的 DSH agent 自主执行
+  - 通过 `dsh --profile headless` 模式运行：DSH 可读写工作区文件、执行命令、维护计划
+  - 后台异步运行（复用任务系统）：立即返回 task_id，用 `get_task_status` 查询最终回答
+  - 长回复完整返回（MCP 客户端不受 dashboard 800 字符摘要影响）
+  - config.json 新增 `dsh` 配置节：`api_key`（或环境变量 DEEPSEEK_API_KEY）+ `workspace`
+  - 未安装 dsh 时返回友好安装指引（npm install -g @deepseek-ai/dsh）
+- 工具总数 49 → 50
+
 ## [v1.6.1] - 2026-08-14
 
 ### Fixed

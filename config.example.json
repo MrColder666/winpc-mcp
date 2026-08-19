@@ -4,5 +4,9 @@
   "token": "",
   "allowed_dirs": [],
   "confirm_dangerous": false,
-  "dashboard_password": ""
+  "dashboard_password": "",
+  "dsh": {
+    "api_key": "sk-你的DeepSeekAPIKey（也可用环境变量 DEEPSEEK_API_KEY）",
+    "workspace": "D:\\dsh-workspace"
+  }
 }
